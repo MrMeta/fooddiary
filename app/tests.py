@@ -1,17 +1,17 @@
-from django.http import HttpRequest
 from django.test import TestCase
-from django.urls import resolve
-from app.views import food_list
+from app.models import Food
 
 
 class FoodListTest(TestCase):
 
-    def test_root_url_resolves_to_food_list_view(self):
-        found = resolve('/')
-        self.assertEqual(found.func, food_list)
+    def test_uses_list_template(self):
+        response = self.client.get('/')
+        self.assertTemplateUsed(response, 'app/food_list.html')
 
-    def test_food_list_returns_correct_html(self):
-        request = HttpRequest()
-        response = food_list(request)
-        self.assertTrue(response.content.startswith(b'\n<html>'))
-        self.assertTrue(response.content.endswith(b'</html>\n'))
+    def test_passes_correct_food_list(self):
+        Food.objects.bulk_create([
+            Food(name='베이컨 베스트 토스트'),
+            Food(name='햄 치즈 토스트'),
+        ])
+        response = self.client.get('/')
+        self.assertEqual(list(response.context['foods']), list(Food.objects.all()))
