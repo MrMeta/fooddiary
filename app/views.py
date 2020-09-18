@@ -1,5 +1,5 @@
 from django.shortcuts import redirect, render
-from .models import Food
+from .models import Food, Store
 from .forms import FoodForm
 
 
@@ -14,3 +14,9 @@ def create_food(request):
         form.save()
         return redirect('food_list')
     return redirect('food_list')
+
+
+def store_list(request):
+    stores = Store.objects.all()
+    print(stores)
+    return render(request, 'app/store_list.html', {'stores': stores})
