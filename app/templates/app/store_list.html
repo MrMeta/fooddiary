@@ -2,6 +2,7 @@
 
 {% block content %}
     <div>
+        <a href={% url 'food_list' %}>back to food list</a>
         <h2 class="margin-bottom">Store List</h2>
         <div class="margin-bottom">
             <form method="POST" action={% url 'create_store' %}>

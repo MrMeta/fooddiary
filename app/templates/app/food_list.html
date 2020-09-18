@@ -1,6 +1,7 @@
 {% extends 'app/base.html' %}
 
 {% block content %}
+    <h2 class="margin-bottom">Food List</h2>
     <div class="margin-bottom">
         <form method="POST" action={% url 'create_food' %}>
             {% csrf_token %}
