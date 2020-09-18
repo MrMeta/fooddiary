@@ -19,3 +19,11 @@ def create_food(request):
 def store_list(request):
     stores = Store.objects.all()
     return render(request, 'app/store_list.html', {'stores': stores, 'form': StoreForm()})
+
+
+def create_store(request):
+    form = StoreForm(data=request.POST)
+    if form.is_valid():
+        form.save()
+        return redirect('store_list')
+    return redirect('store_list')

@@ -4,7 +4,7 @@
     <div>
         <h2 class="margin-bottom">Store List</h2>
         <div class="margin-bottom">
-            <form method="POST">
+            <form method="POST" action={% url 'create_store' %}>
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit" class="btn btn-primary">Submit</button>

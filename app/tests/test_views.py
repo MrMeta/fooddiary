@@ -56,3 +56,29 @@ class StoreListTest(TestCase):
         ])
         response = self.client.get('/store')
         self.assertEqual(list(response.context['stores']), list(Store.objects.all()))
+
+
+class CreateStoreTest(TestCase):
+
+    def test_redirect_if_form_is_invalid(self):
+        response = self.client.post(
+            '/create',
+            data={},
+        )
+        self.assertRedirects(response, '/')
+
+    def save_food_if_form_is_invalid(self):
+        response = self.client.post(
+            '/create',
+            data={'name': 'home', 'description': 'my home'},
+        )
+        new_item = Food.objects.first()
+        self.assertEqual(new_item.name, 'home')
+        self.assertEqual(new_item.description, 'my home')
+
+    def test_redirect_if_form_is_valid(self):
+        response = self.client.post(
+            '/create',
+            data={'name': 'home', 'address': 'my home'},
+        )
+        self.assertRedirects(response, '/')
