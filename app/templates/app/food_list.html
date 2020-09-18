@@ -1,7 +1,22 @@
 {% extends 'app/base.html' %}
 
+{% block content %}
 <div>
-    {% for food in foods %}
-        <p>{{ food }}</p>
-    {% endfor %}
+    <table class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Created Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for food in foods %}
+                <tr>
+                    <td>{{ food.name }}</td>
+                    <td>{{ food.created_date }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
+{% endblock %}
