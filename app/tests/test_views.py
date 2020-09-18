@@ -43,6 +43,18 @@ class CreateFoodTest(TestCase):
         self.assertRedirects(response, '/')
 
 
+class FoodDetailTest(TestCase):
+
+    def test_passes_correct_food(self):
+        food = Food.objects.create(name='떡볶이')
+        response = self.client.get('/1')
+        self.assertEqual((response.context['food']), food)
+
+    def test_show_404_if_id_is_invalid(self):
+        response = self.client.get('/1')
+        self.assertEqual(response.status_code, 404)
+
+
 class StoreListTest(TestCase):
 
     def test_uses_list_template(self):
