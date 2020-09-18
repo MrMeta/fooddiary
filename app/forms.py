@@ -30,5 +30,4 @@ class StoreForm(forms.models.ModelForm):
         }
         error_messages={
             'name': {'required': REQUIRED_ERROR_MESSAGE},
-            'address': {'required': REQUIRED_ERROR_MESSAGE},
         }
