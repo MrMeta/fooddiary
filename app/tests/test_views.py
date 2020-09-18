@@ -47,8 +47,9 @@ class FoodDetailTest(TestCase):
 
     def test_passes_correct_data(self):
         food = Food.objects.create(name='떡볶이')
-        FoodReview.objects.create(food=food, content='너무 맵다. 눈물 난다')
-        reviews = FoodReview.objects.filter(food=food)
+        FoodReview.objects.create(food=food, title='first', content='너무 맵다. 눈물 난다')
+        FoodReview.objects.create(food=food, title='second', content='두 번째 시식에서는 적응했다')
+        reviews = FoodReview.objects.filter(food=food).order_by('-created_date')
 
         response = self.client.get('/1')
         self.assertEqual(response.context['food'], food)

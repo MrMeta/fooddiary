@@ -18,7 +18,7 @@ def create_food(request):
 
 def food_detail(request, id):
     food = get_object_or_404(Food, pk=id)
-    reviews = FoodReview.objects.filter(food=id)
+    reviews = FoodReview.objects.filter(food=id).order_by('-created_date')
     return render(request, 'app/food_detail.html', {'food': food, 'reviews': reviews})
 
 
