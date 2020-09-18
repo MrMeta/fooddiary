@@ -4,7 +4,7 @@ from .forms import FoodForm, StoreForm, FoodReviewForm
 
 
 def food_list(request):
-    foods = Food.objects.all()
+    foods = Food.objects.all().order_by('-created_date')
     return render(request, 'app/food_list.html', {'foods': foods, 'form': FoodForm()})
 
 

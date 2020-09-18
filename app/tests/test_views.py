@@ -14,7 +14,7 @@ class FoodListTest(TestCase):
             Food(name='햄 치즈 토스트'),
         ])
         response = self.client.get('/')
-        self.assertEqual(list(response.context['foods']), list(Food.objects.all()))
+        self.assertEqual(list(response.context['foods']), list(Food.objects.all().order_by('-created_date')))
 
 
 class CreateFoodTest(TestCase):
