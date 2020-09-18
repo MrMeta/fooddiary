@@ -23,6 +23,7 @@ class Food(models.Model):
 
 class FoodReview(models.Model):
     food = models.ForeignKey(Food, on_delete=models.CASCADE)
+    title = models.CharField(max_length=30)
     content = models.TextField()
     created_date = models.DateTimeField(default=timezone.now)
     updated_date = models.DateTimeField(auto_now=True)
