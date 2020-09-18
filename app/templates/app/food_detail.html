@@ -20,7 +20,7 @@
     <hr />
     <h4>Write review</h4>
     <div>
-        <form method="POST">
+        <form method="POST" action={% url 'create_review' food.id %}>
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" class="btn btn-primary">Submit</button>

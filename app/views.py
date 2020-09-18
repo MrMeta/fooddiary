@@ -33,3 +33,14 @@ def create_store(request):
         form.save()
         return redirect('store_list')
     return redirect('store_list')
+
+
+def create_review(request, id):
+    form = FoodReviewForm(data=request.POST)
+    if form.is_valid():
+        review = form.save(commit=False)
+        review.food_id = id
+        review.save()
+        return redirect('food_detail', id)
+    return redirect('food_detail', id)
+
