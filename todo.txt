@@ -1,1 +1,0 @@
-1. list에서 created_date 형식 변경

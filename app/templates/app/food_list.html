@@ -35,7 +35,7 @@
                 {% for food in foods %}
                     <tr>
                         <td>{{ food.name }}</td>
-                        <td>{{ food.created_date }}</td>
+                        <td>{{ food.created_date|date:'Y-m-d H:i:s' }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
