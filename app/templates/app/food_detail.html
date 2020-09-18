@@ -17,4 +17,13 @@
             <p>{{ review.content }}</p>
         </div>
     {% endfor %}
+    <hr />
+    <h4>Write review</h4>
+    <div>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
 {% endblock %}

@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from .models import Food, FoodReview, Store
-from .forms import FoodForm, StoreForm
+from .forms import FoodForm, StoreForm, FoodReviewForm
 
 
 def food_list(request):
@@ -19,7 +19,7 @@ def create_food(request):
 def food_detail(request, id):
     food = get_object_or_404(Food, pk=id)
     reviews = FoodReview.objects.filter(food=id).order_by('-created_date')
-    return render(request, 'app/food_detail.html', {'food': food, 'reviews': reviews})
+    return render(request, 'app/food_detail.html', {'food': food, 'reviews': reviews, 'form': FoodReviewForm()})
 
 
 def store_list(request):
