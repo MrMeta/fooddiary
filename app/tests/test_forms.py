@@ -8,7 +8,7 @@ from app.forms import (
 
 class FoodFormTest(TestCase):
 
-    def test_from_validates_required_items(self):
+    def test_validates_required_items(self):
         form = FoodForm(data={'name': ''})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['name'], [REQUIRED_ERROR_MESSAGE])

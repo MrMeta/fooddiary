@@ -27,7 +27,7 @@ class CreateFoodTest(TestCase):
         self.assertRedirects(response, '/')
 
     def save_food_if_form_is_valid(self):
-        response = self.client.post(
+        self.client.post(
             '/create',
             data={'name': 'food', 'description': 'test'},
         )
