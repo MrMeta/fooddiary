@@ -1,7 +1,7 @@
 {% extends 'app/base.html' %}
 
 {% block content %}
-    <div>
+    <div class="margin-bottom">
         <form method="POST">
             {% csrf_token %}
             {{ form.as_p }}
