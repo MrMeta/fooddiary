@@ -34,7 +34,7 @@
             <tbody>
                 {% for food in foods %}
                     <tr>
-                        <td>{{ food.name }}</td>
+                        <td><a href={% url 'food_detail' food.id %}>{{ food.name }}</a></td>
                         <td>{{ food.created_date|date:'Y-m-d H:i:s' }}</td>
                     </tr>
                 {% endfor %}
