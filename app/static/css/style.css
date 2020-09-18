@@ -11,3 +11,9 @@ select#id_store {
     display: inline;
     width: calc(100% - 60px);
 }
+
+.detail_created_date {
+    font-size: 90%;
+    font-style: italic;
+    color: darkgray;
+}

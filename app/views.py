@@ -1,4 +1,4 @@
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 from .models import Food, Store
 from .forms import FoodForm, StoreForm
 
@@ -14,6 +14,11 @@ def create_food(request):
         form.save()
         return redirect('food_list')
     return redirect('food_list')
+
+
+def food_detail(request, id):
+    food = get_object_or_404(Food, pk=id)
+    return render(request, 'app/food_detail.html', {'food': food})
 
 
 def store_list(request):
