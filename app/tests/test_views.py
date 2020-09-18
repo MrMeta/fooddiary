@@ -21,14 +21,14 @@ class CreateFoodTest(TestCase):
 
     def test_redirect_if_form_is_invalid(self):
         response = self.client.post(
-            '/create',
+            '/add',
             data={'description': 'test'},
         )
         self.assertRedirects(response, '/')
 
     def save_food_if_form_is_valid(self):
         self.client.post(
-            '/create',
+            '/add',
             data={'name': 'food', 'description': 'test'},
         )
         new_item = Food.objects.first()
@@ -37,7 +37,7 @@ class CreateFoodTest(TestCase):
 
     def test_redirect_if_form_is_valid(self):
         response = self.client.post(
-            '/create',
+            '/add',
             data={'name': 'food', 'description': 'test'},
         )
         self.assertRedirects(response, '/')
