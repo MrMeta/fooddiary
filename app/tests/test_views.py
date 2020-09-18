@@ -99,3 +99,33 @@ class CreateStoreTest(TestCase):
             data={'name': 'home', 'address': 'my home'},
         )
         self.assertRedirects(response, '/')
+
+
+class CreateReViewTest(TestCase):
+
+    def test_redirect_if_form_is_invalid(self):
+        Food.objects.create(name='name')
+        response = self.client.post(
+            '/1/reviews/add',
+            data={},
+        )
+        self.assertRedirects(response, '/1')
+
+    def save_review_if_form_is_valid(self):
+        Food.objects.create(name='name')
+        self.client.post(
+            '/1/reviews/add',
+            data={'title': 'title', 'content': 'content'},
+        )
+        new_item = FoodReview.objects.first()
+        self.assertEqual(new_item.food_id, 1)
+        self.assertEqual(new_item.title, 'title')
+        self.assertEqual(new_item.content, 'content')
+
+    def test_redirect_if_form_is_valid(self):
+        Food.objects.create(name='name')
+        response = self.client.post(
+            '/1/reviews/add',
+            data={'title': 'title', 'content': 'content'},
+        )
+        self.assertRedirects(response, '/1')
