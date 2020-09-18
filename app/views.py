@@ -16,9 +16,9 @@ def create_food(request):
     return redirect('food_list')
 
 
-def food_detail(request, id):
-    food = get_object_or_404(Food, pk=id)
-    reviews = FoodReview.objects.filter(food=id).order_by('-created_date')
+def food_detail(request, food_id):
+    food = get_object_or_404(Food, pk=food_id)
+    reviews = FoodReview.objects.filter(food=food_id).order_by('-created_date')
     return render(request, 'app/food_detail.html', {'food': food, 'reviews': reviews, 'form': FoodReviewForm()})
 
 
@@ -35,12 +35,12 @@ def create_store(request):
     return redirect('store_list')
 
 
-def create_review(request, id):
+def create_review(request, food_id):
     form = FoodReviewForm(data=request.POST)
     if form.is_valid():
         review = form.save(commit=False)
-        review.food_id = id
+        review.food_id = food_id
         review.save()
-        return redirect('food_detail', id)
-    return redirect('food_detail', id)
+        return redirect('food_detail', food_id)
+    return redirect('food_detail', food_id)
 
