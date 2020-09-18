@@ -1,6 +1,5 @@
 from django import forms
-
-from .models import Food
+from .models import Food, Store
 
 REQUIRED_ERROR_MESSAGE = "You must input this field"
 
@@ -17,4 +16,19 @@ class FoodForm(forms.models.ModelForm):
         }
         error_messages={
             'name': {'required': REQUIRED_ERROR_MESSAGE}
+        }
+
+
+class StoreForm(forms.models.ModelForm):
+
+    class Meta:
+        model=Store
+        fields=('name', 'address')
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+        error_messages={
+            'name': {'required': REQUIRED_ERROR_MESSAGE},
+            'address': {'required': REQUIRED_ERROR_MESSAGE},
         }
