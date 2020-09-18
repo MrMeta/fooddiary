@@ -8,4 +8,13 @@
     </div>
     <p class="detail_created_date">Created Date: {{ food.created_date|date:'Y-m-d H:i:s' }}</p>
     <p>{{ food.description }}</p>
+    <h3 class="margin-top margin-bottom">Food Reviews</h3>
+    {% for review in reviews %}
+        <hr />
+        <div>
+            <h4>{{ review.title }}</h4>
+            <p class="detail_created_date">Created Date: {{ review.created_date|date:'Y-m-d H:i:s' }}</p>
+            <p>{{ review.content }}</p>
+        </div>
+    {% endfor %}
 {% endblock %}
