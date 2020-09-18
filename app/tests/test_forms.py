@@ -1,6 +1,7 @@
 from django.test import TestCase
 from app.forms import (
     FoodForm,
+    StoreForm,
     FoodReviewForm,
     REQUIRED_ERROR_MESSAGE,
 )
@@ -10,6 +11,14 @@ class FoodFormTest(TestCase):
 
     def test_validates_required_items(self):
         form = FoodForm(data={'name': ''})
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.errors['name'], [REQUIRED_ERROR_MESSAGE])
+
+
+class StoreFormTest(TestCase):
+
+    def test_validates_required_items(self):
+        form = StoreForm(data={'name': ''})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.errors['name'], [REQUIRED_ERROR_MESSAGE])
 
