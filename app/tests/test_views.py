@@ -1,5 +1,5 @@
 from django.test import TestCase
-from app.models import Food
+from app.models import Food, Store
 
 
 class FoodListTest(TestCase):
@@ -41,3 +41,18 @@ class CreateFoodTest(TestCase):
             data={'name': 'food', 'description': 'test'},
         )
         self.assertRedirects(response, '/')
+
+
+class StoreListTest(TestCase):
+
+    def test_uses_list_template(self):
+        response = self.client.get('/store')
+        self.assertTemplateUsed(response, 'app/store_list.html')
+
+    def test_passes_correct_food_list(self):
+        Store.objects.bulk_create([
+            Store(name='이삭 토스트'),
+            Store(name='감탄 떡볶이'),
+        ])
+        response = self.client.get('/store')
+        self.assertEqual(list(response.context['stores']), list(Store.objects.all()))
