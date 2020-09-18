@@ -1,22 +1,29 @@
 {% extends 'app/base.html' %}
 
 {% block content %}
-<div>
-    <table class="table">
-        <thead class="thead-dark">
-            <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Created Date</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for food in foods %}
+    <div>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+    <div>
+        <table class="table">
+            <thead class="thead-dark">
                 <tr>
-                    <td>{{ food.name }}</td>
-                    <td>{{ food.created_date }}</td>
+                    <th scope="col">Name</th>
+                    <th scope="col">Created Date</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                {% for food in foods %}
+                    <tr>
+                        <td>{{ food.name }}</td>
+                        <td>{{ food.created_date }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 {% endblock %}

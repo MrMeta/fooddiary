@@ -10,6 +10,10 @@ class FoodForm(forms.models.ModelForm):
     class Meta:
         model=Food
         fields=('name', 'description')
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.TextInput(attrs={'class': 'form-control'}),
+        }
         error_messages={
             'name': {'required': REQUIRED_ERROR_MESSAGE}
         }
