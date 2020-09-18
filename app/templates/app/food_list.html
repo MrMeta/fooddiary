@@ -2,7 +2,7 @@
 
 {% block content %}
     <div class="margin-bottom">
-        <form method="POST">
+        <form method="POST" action={% url 'create_food' %}>
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" class="btn btn-primary">Submit</button>
