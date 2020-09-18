@@ -19,3 +19,13 @@ class Food(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class FoodReview(models.Model):
+    food = models.ForeignKey(Food, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_date = models.DateTimeField(default=timezone.now)
+    updated_date = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return '%s#%s' % (self.food, self.id)
