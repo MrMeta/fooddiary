@@ -1,5 +1,5 @@
 from django.test import TestCase
-from app.models import Food, Store
+from app.models import Food, FoodReview, Store
 
 
 class FoodListTest(TestCase):
@@ -45,10 +45,14 @@ class CreateFoodTest(TestCase):
 
 class FoodDetailTest(TestCase):
 
-    def test_passes_correct_food(self):
+    def test_passes_correct_data(self):
         food = Food.objects.create(name='떡볶이')
+        FoodReview.objects.create(food=food, content='너무 맵다. 눈물 난다')
+        reviews = FoodReview.objects.filter(food=food)
+
         response = self.client.get('/1')
-        self.assertEqual((response.context['food']), food)
+        self.assertEqual(response.context['food'], food)
+        self.assertEqual(list(response.context['reviews']), list(reviews))
 
     def test_show_404_if_id_is_invalid(self):
         response = self.client.get('/1')

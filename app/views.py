@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404, redirect, render
-from .models import Food, Store
+from .models import Food, FoodReview, Store
 from .forms import FoodForm, StoreForm
 
 
@@ -18,7 +18,8 @@ def create_food(request):
 
 def food_detail(request, id):
     food = get_object_or_404(Food, pk=id)
-    return render(request, 'app/food_detail.html', {'food': food})
+    reviews = FoodReview.objects.filter(food=id)
+    return render(request, 'app/food_detail.html', {'food': food, 'reviews': reviews})
 
 
 def store_list(request):
