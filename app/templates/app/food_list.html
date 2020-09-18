@@ -5,7 +5,22 @@
     <div class="margin-bottom">
         <form method="POST" action={% url 'create_food' %}>
             {% csrf_token %}
-            {{ form.as_p }}
+            <div
+                <label for="id_name">Name:</label>
+                {{ form.name }}
+            </div>
+            <div>
+                <label for="id_description">Description:</label>
+                {{ form.description }}
+            </div>
+            <div>
+                <label for="id_store">Store:</label>
+                <div>
+                    {{ form.store }}
+                    <button type="button" class="btn btn-secondary" onclick="(() => { window.location.href='/store'; })()">Add</button>
+
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>

@@ -6,3 +6,8 @@ h1 {
 .margin-bottom {
     margin-bottom: 50px;
 }
+
+select#id_store {
+    display: inline;
+    width: calc(100% - 60px);
+}
