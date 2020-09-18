@@ -9,9 +9,10 @@ class FoodForm(forms.models.ModelForm):
 
     class Meta:
         model=Food
-        fields=('name', 'description')
+        fields=('name', 'description', 'store')
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'store': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.TextInput(attrs={'class': 'form-control'}),
         }
         error_messages={
