@@ -4,8 +4,11 @@ from .forms import FoodForm, StoreForm, FoodReviewForm
 
 
 def food_list(request):
+    unreviewed = request.GET.get('unreviewed', 'false')
     foods = Food.objects.all().order_by('-created_date')
-    return render(request, 'app/food_list.html', {'foods': foods, 'form': FoodForm()})
+    if unreviewed == 'true':
+        foods = Food.objects.filter(foodreview__isnull=True).order_by('-created_date')
+    return render(request, 'app/food_list.html', {'foods': foods, 'form': FoodForm(), 'unreviewed': unreviewed})
 
 
 def create_food(request):

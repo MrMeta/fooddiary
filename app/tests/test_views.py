@@ -15,6 +15,19 @@ class FoodListTest(TestCase):
         ])
         response = self.client.get('/')
         self.assertEqual(list(response.context['foods']), list(Food.objects.all().order_by('-created_date')))
+        self.assertEqual(response.context['unreviewed'], 'false')
+
+    def test_passes_filtered_food_list_if_no_reviewed_query_string_is_true(self):
+        food_without_review = Food.objects.create(name='간지 치킨')
+        food_with_review = Food.objects.create(name='짜파 치킨')
+        FoodReview.objects.create(
+            food=food_with_review,
+            title='짜파게티 + 치킨',
+            content='음.. 짜파게티 양념에 치킨을 버무려 먹는 맛이었다. 당연한 얘기인가',
+        )
+        response = self.client.get('/?unreviewed=true')
+        self.assertEqual(list(response.context['foods']), [food_without_review])
+        self.assertEqual(response.context['unreviewed'], 'true')
 
 
 class CreateFoodTest(TestCase):
