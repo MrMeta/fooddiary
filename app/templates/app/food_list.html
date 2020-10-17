@@ -24,6 +24,10 @@
         </form>
     </div>
     <div>
+        <input class="form-check-input" type="checkbox" id="unreviewed_checkbox" {% if unreviewed == 'true' %}checked{% endif %}>
+        <label class="form-check-label" for="unreviewed_checkbox">
+            Show only unreviewed
+        </label>
         <table class="table">
             <thead class="thead-dark">
                 <tr>
