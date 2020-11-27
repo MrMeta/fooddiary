@@ -6,8 +6,17 @@
 
 ### Prerequisite
 
+#### Tools
+
 - [pyenv](https://github.com/pyenv/pyenv#installation)
 - [pyenv-virtualenv](https://github.com/pyenv/pyenv-virtualenv#installation)
+
+#### Settings
+
+- secrets.json (See secrets.example.json)
+
+
+
 
 ### Create virtualenv
 
