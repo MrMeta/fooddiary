@@ -8,6 +8,7 @@ from app.serializers import StoreSerializer, FoodSerializer, FoodReviewSerialize
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.filter(deleted_date__isnull=True)
     serializer_class = StoreSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     def perform_destroy(self, instance):
         instance.deleted_date = timezone.now()
