@@ -9,6 +9,7 @@ class TestStoreViewSet(TestCase):
     def test_list(self):
         Store.objects.create(name='Store #1', address='Address #1')
         Store.objects.create(name='Store #2', address='Address #2')
+        Store.objects.create(name='Store #3', address='Address #3', deleted_date=timezone.now())
 
         res = self.client.get('/stores/')
 
@@ -31,6 +32,13 @@ class TestStoreViewSet(TestCase):
         self.assertEqual(res.data['address'], store.address)
 
     def test_return_404_if_retrieve_non_existent_store(self):
+        res = self.client.get('/stores/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_retrieve_deleted_store(self):
+        Store.objects.create(name='Store #1', address='Address #1', deleted_date=timezone.now())
+
         res = self.client.get('/stores/1/')
 
         self.assertEqual(res.status_code, 404)
@@ -62,6 +70,14 @@ class TestStoreViewSet(TestCase):
 
     def test_return_404_if_partial_update_non_existent_store(self):
         data = {'address': 'New Address'}
+
+        res = self.client.patch('/stores/1/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_partial_update_non_existent_store(self):
+        data = {'address': 'New Address'}
+        Store.objects.create(name='Store #1', address='Address #1', deleted_date=timezone.now())
 
         res = self.client.patch('/stores/1/', data=data)
 

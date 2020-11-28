@@ -6,7 +6,7 @@ from app.serializers import StoreSerializer, FoodSerializer, FoodReviewSerialize
 
 
 class StoreViewSet(viewsets.ModelViewSet):
-    queryset = Store.objects.all()
+    queryset = Store.objects.filter(deleted_date__isnull=True)
     serializer_class = StoreSerializer
 
     def perform_destroy(self, instance):
