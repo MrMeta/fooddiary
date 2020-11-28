@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 
-from models import Store, Food, FoodReview
-from serializers import StoreSerializer, FoodSerializer, FoodReviewSerializer
+from app.models import Store, Food, FoodReview
+from app.serializers import StoreSerializer, FoodSerializer, FoodReviewSerializer
 
 
 class StoreViewSet(viewsets.ModelViewSet):
