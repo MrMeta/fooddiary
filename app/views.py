@@ -1,49 +1,50 @@
-from django.shortcuts import get_object_or_404, redirect, render
-from .models import Food, FoodReview, Store
-from .forms import FoodForm, StoreForm, FoodReviewForm
+from django.utils import timezone
+from rest_framework import viewsets
+
+from app.models import Store, Food, FoodReview
+from app.serializers import StoreSerializer, FoodSerializer, FoodReviewSerializer, FoodUpsertSerializer, \
+    FoodReviewUpsertSerializer
 
 
-def food_list(request):
-    unreviewed = request.GET.get('unreviewed', 'false')
-    foods = Food.objects.all().order_by('-created_date')
-    if unreviewed == 'true':
-        foods = Food.objects.filter(foodreview__isnull=True).order_by('-created_date')
-    return render(request, 'app/food_list.html', {'foods': foods, 'form': FoodForm(), 'unreviewed': unreviewed})
+class StoreViewSet(viewsets.ModelViewSet):
+    queryset = Store.objects.filter(deleted_date__isnull=True)
+    serializer_class = StoreSerializer
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def perform_destroy(self, instance):
+        instance.deleted_date = timezone.now()
+        instance.save()
 
 
-def create_food(request):
-    form = FoodForm(data=request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect('food_list')
-    return redirect('food_list')
+class FoodViewSet(viewsets.ModelViewSet):
+    queryset = Food.objects.filter(
+        deleted_date__isnull=True,
+        store__deleted_date__isnull=True,
+    )
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def perform_destroy(self, instance):
+        instance.deleted_date = timezone.now()
+        instance.save()
+
+    def get_serializer_class(self):
+        if self.action in {'retrieve', 'list'}:
+            return FoodSerializer
+        return FoodUpsertSerializer
 
 
-def food_detail(request, food_id):
-    food = get_object_or_404(Food, pk=food_id)
-    reviews = FoodReview.objects.filter(food=food_id).order_by('-created_date')
-    return render(request, 'app/food_detail.html', {'food': food, 'reviews': reviews, 'form': FoodReviewForm()})
+class FoodReviewViewSet(viewsets.ModelViewSet):
+    queryset = FoodReview.objects.filter(
+        deleted_date__isnull=True,
+        food__deleted_date__isnull=True,
+    )
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
+    def perform_destroy(self, instance):
+        instance.deleted_date = timezone.now()
+        instance.save()
 
-def store_list(request):
-    stores = Store.objects.all()
-    return render(request, 'app/store_list.html', {'stores': stores, 'form': StoreForm()})
-
-
-def create_store(request):
-    form = StoreForm(data=request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect('store_list')
-    return redirect('store_list')
-
-
-def create_review(request, food_id):
-    form = FoodReviewForm(data=request.POST)
-    if form.is_valid():
-        review = form.save(commit=False)
-        review.food_id = food_id
-        review.save()
-        return redirect('food_detail', food_id)
-    return redirect('food_detail', food_id)
-
+    def get_serializer_class(self):
+        if self.action in {'retrieve', 'list'}:
+            return FoodReviewSerializer
+        return FoodReviewUpsertSerializer

@@ -1,144 +1,588 @@
-from django.test import TestCase
-from app.models import Food, FoodReview, Store
+from unittest.case import skip
+
+from django.utils import timezone
+
+from fooddiary.test import TestCase
+
+from app.models import Store, Food, FoodReview
 
 
-class FoodListTest(TestCase):
+class TestStoreViewSet(TestCase):
+    def test_list(self):
+        Store.objects.create(name='Store #1', address='Address #1')
+        Store.objects.create(name='Store #2', address='Address #2')
+        Store.objects.create(name='Store #3', address='Address #3', deleted_date=timezone.now())
 
-    def test_uses_list_template(self):
-        response = self.client.get('/')
-        self.assertTemplateUsed(response, 'app/food_list.html')
+        res = self.client.get('/stores/')
 
-    def test_passes_correct_food_list(self):
-        Food.objects.bulk_create([
-            Food(name='베이컨 베스트 토스트'),
-            Food(name='햄 치즈 토스트'),
-        ])
-        response = self.client.get('/')
-        self.assertEqual(list(response.context['foods']), list(Food.objects.all().order_by('-created_date')))
-        self.assertEqual(response.context['unreviewed'], 'false')
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['count'], 2)
 
-    def test_passes_filtered_food_list_if_no_reviewed_query_string_is_true(self):
-        food_without_review = Food.objects.create(name='간지 치킨')
-        food_with_review = Food.objects.create(name='짜파 치킨')
+        for item in res.data['results']:
+            with self.subTest(key=item['id']):
+                store = Store.objects.get(pk=item['id'])
+                self.assertEqual(item['name'], store.name)
+                self.assertEqual(item['address'], store.address)
+
+    def test_retrieve(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+
+        res = self.client.get(f'/stores/{store.id}/')
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['name'], store.name)
+        self.assertEqual(res.data['address'], store.address)
+
+    def test_return_404_if_retrieve_non_existent_store(self):
+        res = self.client.get('/stores/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_retrieve_deleted_store(self):
+        Store.objects.create(name='Store #1', address='Address #1', deleted_date=timezone.now())
+
+        res = self.client.get('/stores/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_create(self):
+        data = {
+            'name': 'Store #1',
+            'address': 'Address #1',
+        }
+
+        res = self.client.post('/stores/', data=data)
+
+        store = Store.objects.first()
+
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data['name'], store.name)
+        self.assertEqual(res.data['address'], store.address)
+
+    def test_partial_update(self):
+        data = {'address': 'New Address'}
+        store = Store.objects.create(name='Store #1', address='Address #1')
+
+        res = self.client.patch(f'/stores/{store.id}/', data=data)
+
+        store.refresh_from_db()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['address'], data['address'])
+
+    def test_return_404_if_partial_update_non_existent_store(self):
+        data = {'address': 'New Address'}
+
+        res = self.client.patch('/stores/1/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_partial_update_undeleted_store(self):
+        data = {'address': 'New Address'}
+        Store.objects.create(name='Store #1', address='Address #1', deleted_date=timezone.now())
+
+        res = self.client.patch('/stores/1/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_update_api_returns_405(self):
+        data = {'address': 'New Address'}
+
+        res = self.client.put('/stores/1/', data=data)
+
+        self.assertEqual(res.status_code, 405)
+
+    def test_destroy(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        res = self.client.delete(f'/stores/{store.id}/')
+
+        self.assertEqual(res.status_code, 204)
+
+        store.refresh_from_db()
+
+        self.assertIsNotNone(store.created_date)
+
+    def test_return_404_if_delete_non_existent_store(self):
+        res = self.client.delete('/stores/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_delete_undeleted_store(self):
+        store = Store.objects.create(
+            name='Store #1',
+            address='Address #1',
+            deleted_date=timezone.now(),
+        )
+        res = self.client.delete(f'/stores/{store.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+
+class TestFoodViewSet(TestCase):
+    def test_list(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        Food.objects.create(store=store, name='Food #1')
+        Food.objects.create(store=store, name='Food #2')
+        Food.objects.create(
+            store=store,
+            name='Food #3',
+            deleted_date=timezone.now(),
+        )
+
+        res = self.client.get('/foods/')
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['count'], 2)
+
+        for item in res.data['results']:
+            with self.subTest(key=item['id']):
+                food = Food.objects.get(pk=item['id'])
+
+                self.assertEqual(item['name'], food.name)
+                self.assertEqual(item['store']['name'], store.name)
+
+    def test_retrieve(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(store=store, name='Food #1')
+
+        res = self.client.get(f'/foods/{food.id}/')
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['name'], food.name)
+        self.assertEqual(res.data['store']['name'], store.name)
+
+    def test_return_404_if_retrieve_non_existent_food(self):
+        res = self.client.get('/foods/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_retrieve_deleted_food(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            deleted_date=timezone.now(),
+        )
+
+        res = self.client.get(f'/foods/{food.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_retrieve_food_of_deleted_store(self):
+        store = Store.objects.create(
+            name='Store #1',
+            address='Address #1',
+            deleted_date=timezone.now(),
+        )
+        food = Food.objects.create(store=store, name='Food #1')
+
+        res = self.client.get(f'/foods/{food.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_create(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        data = {
+            'name': 'Food #1',
+            'description': 'hmm',
+            'store_id': store.id,
+        }
+
+        res = self.client.post('/foods/', data=data)
+
+        food = Food.objects.first()
+
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data['name'], food.name)
+
+    def test_return_400_if_create_food_of_deleted_store(self):
+        store = Store.objects.create(
+            name='Store #1',
+            address='Address #1',
+            deleted_date=timezone.now(),
+        )
+        data = {
+            'name': 'Food #1',
+            'store_id': store.id,
+        }
+
+        res = self.client.post('/foods/', data=data)
+
+        self.assertEqual(res.status_code, 400)
+
+    def test_partial_update(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        new_store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(name='Store #1', store=store)
+        data = {
+            'description': 'hmm',
+            'store_id': new_store.id,
+        }
+
+        res = self.client.patch(f'/foods/{food.id}/', data=data)
+
+        food.refresh_from_db()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['description'], data['description'])
+        self.assertEqual(res.data['store_id'], data['store_id'])
+
+    def test_return_404_if_partial_update_non_existent_food(self):
+        data = {'description': 'hmm'}
+
+        res = self.client.patch('/foods/1/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_partial_update_deleted_food(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        data = {'address': 'New Address'}
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            deleted_date=timezone.now(),
+        )
+
+        res = self.client.patch(f'/foods/{food.id}/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_partial_update_food_of_deleted_store(self):
+        store = Store.objects.create(
+            name='Store #1',
+            address='Address #1',
+            deleted_date=timezone.now(),
+        )
+        food = Food.objects.create(store=store, name='Food #1')
+        data = {'address': 'New Address'}
+
+        res = self.client.patch(f'/foods/{food.id}/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    @skip('To implement')
+    def test_return_404_if_partial_update_food_to_belong_to_deleted_store(self):
+        store = Store.objects.create(
+            name='Store #1',
+            address='Address #1',
+        )
+        new_store = Store.objects.create(
+            name='Store #2',
+            address='Address #2',
+            deleted_date=timezone.now(),
+        )
+        data = {
+            'address': 'New Address',
+            'store_id': new_store.id,
+        }
+        food = Food.objects.create(store=store, name='Food #1')
+
+        res = self.client.patch(f'/foods/{food.id}/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_update_api_returns_405(self):
+        data = {'address': 'New Address'}
+
+        res = self.client.put('/foods/1/', data=data)
+
+        self.assertEqual(res.status_code, 405)
+
+    def test_destroy(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(store=store, name='Food #1')
+
+        res = self.client.delete(f'/foods/{food.id}/')
+
+        self.assertEqual(res.status_code, 204)
+
+        food.refresh_from_db()
+
+        self.assertIsNotNone(food.created_date)
+
+    def test_return_404_if_delete_non_existent_food(self):
+        res = self.client.delete('/foods/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_delete_deleted_food(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            deleted_date=timezone.now(),
+        )
+
+        res = self.client.delete(f'/foods/{food.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_delete_food_of_deleted_store(self):
+        store = Store.objects.create(
+            name='Store #1',
+            address='Address #1',
+            deleted_date=timezone.now(),
+        )
+        food = Food.objects.create(store=store, name='Food #1')
+
+        res = self.client.delete(f'/foods/{food.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+
+class TestFoodReviewViewSet(TestCase):
+    def test_list(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(name='Food #1', description='hmm', store=store)
+        FoodReview.objects.create(food=food, title='Title #1', content='hmm')
+        FoodReview.objects.create(food=food, title='Title #2', content='hmm')
         FoodReview.objects.create(
-            food=food_with_review,
-            title='짜파게티 + 치킨',
-            content='음.. 짜파게티 양념에 치킨을 버무려 먹는 맛이었다. 당연한 얘기인가',
+            food=food,
+            title='Title #2',
+            content='hmm',
+            deleted_date=timezone.now(),
         )
-        response = self.client.get('/?unreviewed=true')
-        self.assertEqual(list(response.context['foods']), [food_without_review])
-        self.assertEqual(response.context['unreviewed'], 'true')
 
+        res = self.client.get('/food-reviews/')
 
-class CreateFoodTest(TestCase):
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['count'], 2)
 
-    def test_redirect_if_form_is_invalid(self):
-        response = self.client.post(
-            '/add',
-            data={'description': 'test'},
+        for item in res.data['results']:
+            with self.subTest(key=item['id']):
+                food_review = FoodReview.objects.get(pk=item['id'])
+
+                self.assertEqual(item['title'], food_review.title)
+                self.assertEqual(item['food']['name'], food.name)
+
+    def test_retrieve(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(name='Food #1', description='hmm', store=store)
+        food_review = FoodReview.objects.create(food=food, title='Title #1', content='hmm')
+
+        res = self.client.get(f'/food-reviews/{food_review.id}/')
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['title'], food_review.title)
+        self.assertEqual(res.data['food']['name'], food.name)
+
+    def test_return_404_if_retrieve_non_existent_review(self):
+        res = self.client.get('/food-reviews/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_retrieve_deleted_review(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(name='Food #1', description='hmm', store=store)
+        food_review = FoodReview.objects.create(
+            food=food,
+            title='Title #1',
+            content='hmm',
+            deleted_date=timezone.now(),
         )
-        self.assertRedirects(response, '/')
 
-    def save_food_if_form_is_valid(self):
-        self.client.post(
-            '/add',
-            data={'name': 'food', 'description': 'test'},
+        res = self.client.get(f'/food-reviews/{food_review.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_retrieve_review_for_deleted_food(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            description='hmm',
+            deleted_date=timezone.now(),
         )
-        new_item = Food.objects.first()
-        self.assertEqual(new_item.name, 'food')
-        self.assertEqual(new_item.description, 'test')
-
-    def test_redirect_if_form_is_valid(self):
-        response = self.client.post(
-            '/add',
-            data={'name': 'food', 'description': 'test'},
+        food_review = FoodReview.objects.create(
+            food=food,
+            title='Title #1',
+            content='hmm',
         )
-        self.assertRedirects(response, '/')
 
+        res = self.client.get(f'/food-reviews/{food_review.id}/')
 
-class FoodDetailTest(TestCase):
+        self.assertEqual(res.status_code, 404)
 
-    def test_passes_correct_data(self):
-        food = Food.objects.create(name='떡볶이')
-        FoodReview.objects.create(food=food, title='first', content='너무 맵다. 눈물 난다')
-        FoodReview.objects.create(food=food, title='second', content='두 번째 시식에서는 적응했다')
-        reviews = FoodReview.objects.filter(food=food).order_by('-created_date')
-
-        response = self.client.get('/1')
-        self.assertEqual(response.context['food'], food)
-        self.assertEqual(list(response.context['reviews']), list(reviews))
-
-    def test_show_404_if_id_is_invalid(self):
-        response = self.client.get('/1')
-        self.assertEqual(response.status_code, 404)
-
-
-class StoreListTest(TestCase):
-
-    def test_uses_list_template(self):
-        response = self.client.get('/store')
-        self.assertTemplateUsed(response, 'app/store_list.html')
-
-    def test_passes_correct_food_list(self):
-        Store.objects.bulk_create([
-            Store(name='이삭 토스트'),
-            Store(name='감탄 떡볶이'),
-        ])
-        response = self.client.get('/store')
-        self.assertEqual(list(response.context['stores']), list(Store.objects.all()))
-
-
-class CreateStoreTest(TestCase):
-
-    def test_redirect_if_form_is_invalid(self):
-        response = self.client.post(
-            '/store/add',
-            data={},
+    def test_create(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            description='hmm',
         )
-        self.assertRedirects(response, '/store')
+        data = {
+            'title': 'Title #1',
+            'content': 'hmm',
+            'food_id': food.id,
+        }
 
-    def save_food_if_form_is_valid(self):
-        self.client.post(
-            '/store/add',
-            data={'name': 'home', 'description': 'my home'},
+        res = self.client.post('/food-reviews/', data=data)
+
+        food_review = FoodReview.objects.first()
+
+        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.data['title'], food_review.title)
+
+    def test_return_400_if_create_review_for_deleted_food(self):
+        store = Store.objects.create(
+            name='Store #1',
+            address='Address #1',
         )
-        new_item = Store.objects.first()
-        self.assertEqual(new_item.name, 'home')
-        self.assertEqual(new_item.description, 'my home')
-
-    def test_redirect_if_form_is_valid(self):
-        response = self.client.post(
-            '/store/add',
-            data={'name': 'home', 'address': 'my home'},
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            description='hmm',
+            deleted_date=timezone.now(),
         )
-        self.assertRedirects(response, '/store')
+        data = {
+            'name': 'Food #1',
+            'food_id': food.id,
+        }
 
+        res = self.client.post('/food-reviews/', data=data)
 
-class CreateReViewTest(TestCase):
+        self.assertEqual(res.status_code, 400)
 
-    def test_redirect_if_form_is_invalid(self):
-        Food.objects.create(name='name')
-        response = self.client.post(
-            '/1/reviews/add',
-            data={},
+    def test_partial_update(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(name='Store #1', store=store)
+        new_food = Food.objects.create(name='Store #2', store=store)
+        food_review = FoodReview.objects.create(food=food, title='Title #1', content='hmm')
+        data = {
+            'title': 'Title #2',
+            'content': 'hmm.....',
+            'food_id': new_food.id,
+        }
+
+        res = self.client.patch(f'/food-reviews/{food_review.id}/', data=data)
+
+        food_review.refresh_from_db()
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['title'], data['title'])
+        self.assertEqual(res.data['content'], data['content'])
+        self.assertEqual(res.data['food_id'], data['food_id'])
+
+    def test_return_404_if_partial_update_non_existent_review(self):
+        data = {'content': 'hmm'}
+
+        res = self.client.patch('/food-reviews/1/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_partial_update_deleted_review(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(store=store, name='Food #1')
+        food_review = FoodReview.objects.create(
+            food=food,
+            title='Title #1',
+            content='hmm',
+            deleted_date=timezone.now(),
         )
-        self.assertRedirects(response, '/1')
+        data = {'content': 'hmm'}
 
-    def save_review_if_form_is_valid(self):
-        Food.objects.create(name='name')
-        self.client.post(
-            '/1/reviews/add',
-            data={'title': 'title', 'content': 'content'},
-        )
-        new_item = FoodReview.objects.first()
-        self.assertEqual(new_item.food_id, 1)
-        self.assertEqual(new_item.title, 'title')
-        self.assertEqual(new_item.content, 'content')
+        res = self.client.patch(f'/food-reviews/{food_review.id}/', data=data)
 
-    def test_redirect_if_form_is_valid(self):
-        Food.objects.create(name='name')
-        response = self.client.post(
-            '/1/reviews/add',
-            data={'title': 'title', 'content': 'content'},
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_partial_update_review_for_deleted_food(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            deleted_date=timezone.now(),
         )
-        self.assertRedirects(response, '/1')
+        food_review = FoodReview.objects.create(
+            food=food,
+            title='Title #1',
+            content='hmm',
+        )
+        data = {'content': 'hmm'}
+
+        res = self.client.patch(f'/food-reviews/{food_review.id}/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    @skip('To implement')
+    def test_return_404_if_partial_update_review_to_belong_to_deleted_food(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+        )
+        new_food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            deleted_date=timezone.now(),
+        )
+        data = {
+            'content': 'hmm',
+            'store_id': new_food.id,
+        }
+        food_review = FoodReview.objects.create(food=food, title='Title #1', content='hmm')
+
+        res = self.client.patch(f'/food-reviews/{food_review.id}/', data=data)
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_update_api_returns_405(self):
+        data = {'content': 'hmm'}
+
+        res = self.client.put('/food-reviews/1/', data=data)
+
+        self.assertEqual(res.status_code, 405)
+
+    def test_destroy(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(store=store, name='Food #1')
+        food_review = FoodReview.objects.create(
+            food=food,
+            title='Title #1',
+            content='hmm',
+        )
+
+        res = self.client.delete(f'/food-reviews/{food_review.id}/')
+
+        self.assertEqual(res.status_code, 204)
+
+        food_review.refresh_from_db()
+
+        self.assertIsNotNone(food_review.deleted_date)
+
+    def test_return_404_if_delete_non_existent_review(self):
+        res = self.client.delete('/food-reviews/1/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_delete_deleted_review(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(store=store, name='Food #1')
+        food_review = FoodReview.objects.create(
+            food=food,
+            title='Title #1',
+            content='hmm',
+            deleted_date=timezone.now(),
+        )
+
+        res = self.client.delete(f'/food-reviews/{food_review.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+    def test_return_404_if_delete_review_for_deleted_food(self):
+        store = Store.objects.create(name='Store #1', address='Address #1')
+        food = Food.objects.create(
+            store=store,
+            name='Food #1',
+            deleted_date=timezone.now(),
+        )
+        food_review = FoodReview.objects.create(
+            food=food,
+            title='Title #1',
+            content='hmm',
+        )
+
+        res = self.client.delete(f'/food-reviews/{food_review.id}/')
+
+        self.assertEqual(res.status_code, 404)
+
+
