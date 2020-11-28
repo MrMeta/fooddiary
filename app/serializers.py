@@ -10,11 +10,25 @@ class StoreSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FoodSerializer(serializers.ModelSerializer):
+class BaseFoodSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Food
-        fields = '__all__'
+        fields = ['id', 'name', 'description']
+
+
+class FoodUpsertSerializer(BaseFoodSerializer):
+    store_id = serializers.IntegerField(required=True)
+
+    class Meta(BaseFoodSerializer.Meta):
+        fields = BaseFoodSerializer.Meta.fields + ['store_id']
+
+
+class FoodSerializer(BaseFoodSerializer):
+    store = StoreSerializer()
+
+    class Meta(BaseFoodSerializer.Meta):
+        fields = BaseFoodSerializer.Meta.fields + ['store']
 
 
 class FoodReviewSerializer(serializers.ModelSerializer):
