@@ -2,7 +2,8 @@ from django.utils import timezone
 from rest_framework import viewsets
 
 from app.models import Store, Food, FoodReview
-from app.serializers import StoreSerializer, FoodSerializer, FoodReviewSerializer, FoodUpsertSerializer
+from app.serializers import StoreSerializer, FoodSerializer, FoodReviewSerializer, FoodUpsertSerializer, \
+    FoodReviewUpsertSerializer
 
 
 class StoreViewSet(viewsets.ModelViewSet):
@@ -33,5 +34,17 @@ class FoodViewSet(viewsets.ModelViewSet):
 
 
 class FoodReviewViewSet(viewsets.ModelViewSet):
-    queryset = FoodReview.objects.all()
-    serializer_class = FoodReviewSerializer
+    queryset = FoodReview.objects.filter(
+        deleted_date__isnull=True,
+        food__deleted_date__isnull=True,
+    )
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def perform_destroy(self, instance):
+        instance.deleted_date = timezone.now()
+        instance.save()
+
+    def get_serializer_class(self):
+        if self.action in {'retrieve', 'list'}:
+            return FoodReviewSerializer
+        return FoodReviewUpsertSerializer

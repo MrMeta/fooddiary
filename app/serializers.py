@@ -14,7 +14,7 @@ class BaseFoodSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Food
-        fields = ['id', 'name', 'description']
+        fields = ['id', 'name', 'description', 'created_date', 'deleted_date']
 
 
 class FoodUpsertSerializer(BaseFoodSerializer):
@@ -31,8 +31,22 @@ class FoodSerializer(BaseFoodSerializer):
         fields = BaseFoodSerializer.Meta.fields + ['store']
 
 
-class FoodReviewSerializer(serializers.ModelSerializer):
+class BaseFoodReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FoodReview
-        fields = '__all__'
+        fields = ['id', 'title', 'content', 'updated_date', 'created_date', 'deleted_date']
+
+
+class FoodReviewUpsertSerializer(BaseFoodReviewSerializer):
+    food_id = serializers.IntegerField(required=True)
+
+    class Meta(BaseFoodReviewSerializer.Meta):
+        fields = BaseFoodReviewSerializer.Meta.fields + ['food_id']
+
+
+class FoodReviewSerializer(BaseFoodReviewSerializer):
+    food = FoodSerializer()
+
+    class Meta(BaseFoodReviewSerializer.Meta):
+        fields = BaseFoodReviewSerializer.Meta.fields + ['food']
